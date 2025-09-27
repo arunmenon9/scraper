@@ -294,53 +294,6 @@ reviews_fetcher = NeweggReviewsFetcher(existing_session=html_fetcher.get_session
 - ⚠️ **Cons**: Limited real-time features (no WebSockets)
 - ⚠️ **Cons**: Manual SQL query management
 
-## 📈 Scaling Strategy
-
-### Horizontal Scaling (Multi-Instance)
-
-#### 1. **Database-Level Scaling**
-```yaml
-# Scale individual services independently
-docker-compose up --scale scraper=3 --scale parser=2
-```
-
-**Implementation Considerations**:
-- **Database Locking**: SQLite WAL mode enables concurrent readers
-- **Work Distribution**: Database-driven queue prevents duplicate work
-- **Session Isolation**: Each instance processes different sessions
-
-#### 2. **Geographic Distribution**
-
-
-
-
-
-#### 3. **Load Balancing Strategy**
-- **Web Interface**: nginx reverse proxy with session affinity
-- **Scraping Services**: Database-driven work distribution
-- **Database**: Read replicas for web interface, single writer for scraping
-
-### Vertical Scaling (Performance Optimization)
-
-#### 1. **Concurrency Tuning**
-```python
-# Environment-based worker configuration
-max_workers = int(os.environ.get('MAX_WORKERS', '3'))
-batch_size = int(os.environ.get('BATCH_SIZE', '5'))
-```
-
-
-
-### Production Scaling Architecture
-
-### Performance Benchmarks & Capacity Planning
-
-#### Current Performance (Single Instance)
-- **HTML Fetching**: ~10 pages/minute (limited by anti-bot measures)
-- **Review Processing**: ~5 API calls/minute (rate limited)
-- **Parsing**: ~50 sessions/minute (CPU bound)
-- **Database**: ~1000 inserts/second (I/O bound)
-
 
 ## 🔍 Monitoring & Observability
 
@@ -443,12 +396,6 @@ scraper/
 ├── Dockerfile                   # Container configuration
 └── requirements.txt             # Python dependencies
 ```
-
-### Contribution Guidelines
-1. **Branch Strategy**: Feature branches with PR reviews
-2. **Code Quality**: Black formatting, flake8 linting
-3. **Testing**: Minimum 80% coverage requirement
-4. **Documentation**: Docstrings for all public methods
 
 ### Environment Management
 ```bash
