@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Newegg Scraper{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+        <p class="text-muted">Real-time monitoring of scraping activities</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h5 class="card-title">Total Sessions</h5>
+                <h3 class="text-primary">{{ stats.get('total_sessions', 0) }}</h3>
+                <small class="text-muted">Scraping sessions</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card success">
+            <div class="card-body">
+                <h5 class="card-title">Products</h5>
+                <h3 class="text-success">{{ product_count }}</h3>
+                <small class="text-muted">Products in database</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card warning">
+            <div class="card-body">
+                <h5 class="card-title">HTML Pending</h5>
+                <h3 class="text-warning">{{ stats.get('html_fetch_stats', {}).get('pending', 0) }}</h3>
+                <small class="text-muted">Awaiting HTML fetch</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card danger">
+            <div class="card-body">
+                <h5 class="card-title">Parsing Pending</h5>
+                <h3 class="text-info">{{ stats.get('parsing_stats', {}).get('pending', 0) }}</h3>
+                <small class="text-muted">Ready for parsing</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Statistics -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-download"></i> HTML Fetch Status</h5>
+            </div>
+            <div class="card-body">
+                {% for status, count in stats.get('html_fetch_stats', {}).items() %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-capitalize">{{ status }}</span>
+                    <span class="badge bg-{% if status == 'completed' %}success{% elif status == 'failed' %}danger{% else %}warning{% endif %}">
+                        {{ count }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-comments"></i> Review Fetch Status</h5>
+            </div>
+            <div class="card-body">
+                {% for status, count in stats.get('review_fetch_stats', {}).items() %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-capitalize">{{ status }}</span>
+                    <span class="badge bg-{% if status == 'completed' %}success{% elif status == 'failed' %}danger{% else %}warning{% endif %}">
+                        {{ count }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Recent Sessions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_sessions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>Product URL</th>
+                                <th>HTML Status</th>
+                                <th>Review Status</th>
+                                <th>Parsing Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in recent_sessions %}
+                            <tr>
+                                <td><code>{{ session.session_id[:16] }}...</code></td>
+                                <td>
+                                    <a href="{{ session.product_url }}" target="_blank" class="text-decoration-none">
+                                        {{ session.product_url[:50] }}...
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge bg-{% if session.html_status == 'completed' %}success{% elif session.html_status == 'failed' %}danger{% else %}warning{% endif %}">
+                                        {{ session.html_status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge bg-{% if session.review_status == 'completed' %}success{% elif session.review_status == 'failed' %}danger{% else %}warning{% endif %}">
+                                        {{ session.review_status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge bg-{% if session.parsing_status == 'completed' %}success{% elif session.parsing_status == 'failed' %}danger{% else %}warning{% endif %}">
+                                        {{ session.parsing_status }}
+                                    </span>
+                                </td>
+                                <td>{{ session.created_at }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>No sessions found. Upload a CSV file to get started!</p>
+                    <a href="{{ url_for('upload_csv') }}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload CSV
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh dashboard every 30 seconds
+setInterval(function() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update statistics cards
+                location.reload(); // Simple reload for now
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Upload CSV - Newegg Scraper{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-upload"></i> Upload CSV File</h1>
+        <p class="text-muted">Upload a CSV file containing Newegg product URLs for scraping</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-file-csv"></i> CSV File Upload</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="upload-area">
+                        <div class="mb-3">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Drag and drop your CSV file here</h5>
+                            <p class="text-muted">or click to browse files</p>
+                            <input type="file" class="form-control" name="file" accept=".csv" required>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-upload"></i> Upload and Process CSV
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- CSV Format Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> CSV Format Requirements</h5>
+            </div>
+            <div class="card-body">
+                <p>Your CSV file should contain Newegg product URLs. The system supports the following formats:</p>
+
+                <h6>Option 1: Single Column (URLs only)</h6>
+                <pre class="bg-light p-3 rounded"><code>https://www.newegg.com/amd-ryzen-7-9800x3d-ryzen-7-9000-series/p/N82E16819113919
+https://www.newegg.com/other-product-url/p/PRODUCT_ID
+...</code></pre>
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Tips:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Ensure URLs point to Newegg.com product pages</li>
+                        <li>URLs should contain the product ID (e.g., /p/N82E16819113919)</li>
+                        <li>The system will automatically detect and extract product information</li>
+                        <li>Processing will start automatically after upload</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// File input styling and drag-and-drop functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.querySelector('input[type="file"]');
+    const uploadArea = document.querySelector('.upload-area');
+
+    // Drag and drop events
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#007bff';
+        uploadArea.style.backgroundColor = '#f8f9fa';
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#dee2e6';
+        uploadArea.style.backgroundColor = 'transparent';
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#dee2e6';
+        uploadArea.style.backgroundColor = 'transparent';
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            updateFileName(files[0].name);
+        }
+    });
+
+    // File selection
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            updateFileName(e.target.files[0].name);
+        }
+    });
+
+    function updateFileName(name) {
+        const uploadText = uploadArea.querySelector('h5');
+        uploadText.textContent = `Selected: ${name}`;
+    }
+});
+</script>
+{% endblock %}

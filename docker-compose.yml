@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/newegg_scraper.db
+      - RAW_DATA_DIR=/app/data/raw_data
+      - UPLOAD_DIR=/app/data/uploads
+      - LOGS_DIR=/app/logs
+    command: python web.py
+    depends_on:
+      - scraper
+      - parser
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    networks:
+      - scraper_network
+
+  scraper:
+    build: .
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/newegg_scraper.db
+      - RAW_DATA_DIR=/app/data/raw_data
+      - UPLOAD_DIR=/app/data/uploads
+      - LOGS_DIR=/app/logs
+    command: python scraper.py start --poll-interval=30 --batch-size=5
+    restart: unless-stopped
+    network_mode: host
+
+  parser:
+    build: .
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/newegg_scraper.db
+      - RAW_DATA_DIR=/app/data/raw_data
+      - UPLOAD_DIR=/app/data/uploads
+      - LOGS_DIR=/app/logs
+    command: python parser.py start --poll-interval=30 --batch-size=5
+    restart: unless-stopped
+    network_mode: host
+
+  orchestrator:
+    build: .
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/newegg_scraper.db
+      - RAW_DATA_DIR=/app/data/raw_data
+      - UPLOAD_DIR=/app/data/uploads
+      - LOGS_DIR=/app/logs
+    command: tail -f /dev/null  # Keep container running for manual orchestration
+    profiles:
+      - manual
+
+volumes:
+  data:
+  uploads:
+  raw_data:
+
+networks:
+  scraper_network:
+    driver: bridge

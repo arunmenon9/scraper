@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Sessions - Newegg Scraper{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-list"></i> Scraping Sessions</h1>
+        <p class="text-muted">Monitor all scraping sessions and their status</p>
+    </div>
+</div>
+
+{% if sessions %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-table"></i> Session List</h5>
+                <span class="badge bg-primary">{{ pagination.total }} Total Sessions</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>Product URL</th>
+                                <th>HTML Status</th>
+                                <th>Review Status</th>
+                                <th>Parsing Status</th>
+                                <th>Created</th>
+                                <th>Scraped</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr>
+                                <td><code class="small">{{ session.session_id[:16] }}...</code></td>
+                                <td>
+                                    <a href="{{ session.product_url }}" target="_blank"
+                                       class="text-decoration-none" title="{{ session.product_url }}">
+                                        {{ session.product_url[:50] }}{% if session.product_url|length > 50 %}...{% endif %}
+                                        <i class="fas fa-external-link-alt ms-1 small"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge bg-{% if session.html_status == 'completed' %}success{% elif session.html_status == 'failed' %}danger{% else %}warning{% endif %}">
+                                        {{ session.html_status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge bg-{% if session.review_status == 'completed' %}success{% elif session.review_status == 'failed' %}danger{% else %}warning{% endif %}">
+                                        {{ session.review_status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge bg-{% if session.parsing_status == 'completed' %}success{% elif session.parsing_status == 'failed' %}danger{% else %}warning{% endif %}">
+                                        {{ session.parsing_status }}
+                                    </span>
+                                </td>
+                                <td class="small">{{ session.created_at }}</td>
+                                <td class="small">{{ session.scraped_at or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if pagination.total_pages > 1 %}
+                <div class="pagination-wrapper">
+                    <nav aria-label="Session pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('sessions', page=pagination.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for page_num in range(1, pagination.total_pages + 1) %}
+                                {% if page_num == pagination.page %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% elif page_num <= 3 or page_num >= pagination.total_pages - 2 or (page_num >= pagination.page - 1 and page_num <= pagination.page + 1) %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('sessions', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                                {% elif page_num == 4 or page_num == pagination.total_pages - 3 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('sessions', page=pagination.next_num) }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    <div class="text-center text-muted">
+                        Showing {{ (pagination.page - 1) * pagination.per_page + 1 }} to
+                        {{ pagination.page * pagination.per_page if pagination.page * pagination.per_page <= pagination.total else pagination.total }}
+                        of {{ pagination.total }} sessions
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Legend -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-info-circle"></i> Status Legend</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>HTML Fetch Status</h6>
+                        <span class="badge bg-warning me-2">pending</span> Waiting to fetch HTML<br>
+                        <span class="badge bg-success me-2">completed</span> HTML successfully downloaded<br>
+                        <span class="badge bg-danger me-2">failed</span> HTML fetch failed (after retries)
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Review Fetch Status</h6>
+                        <span class="badge bg-warning me-2">pending</span> Waiting to fetch reviews<br>
+                        <span class="badge bg-success me-2">completed</span> Reviews successfully downloaded<br>
+                        <span class="badge bg-danger me-2">failed</span> Review fetch failed (after retries)
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Parsing Status</h6>
+                        <span class="badge bg-warning me-2">pending</span> Ready for parsing<br>
+                        <span class="badge bg-success me-2">completed</span> Data successfully extracted<br>
+                        <span class="badge bg-danger me-2">failed</span> Parsing failed (data issues)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                <h5>No Sessions Found</h5>
+                <p class="text-muted">No scraping sessions have been created yet. Upload a CSV file to get started!</p>
+                <a href="{{ url_for('upload_csv') }}" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
