@@ -407,5 +407,3 @@ docker-compose -f docker-compose.dev.yml up
 cp .env.example .env.prod
 docker-compose -f docker-compose.prod.yml up
 ```
-
-## 🚀 Future Enhancements
