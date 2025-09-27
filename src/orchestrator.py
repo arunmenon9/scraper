@@ -89,7 +89,7 @@ class ScraperOrchestrator:
         print(f"🚀 Starting scraper daemon...")
 
         cmd = [
-            sys.executable, "core/scrapers/scraper_daemon.py", "start",
+            sys.executable, os.path.join(os.path.dirname(__file__), "..", "scraper.py"), "start",
             f"--poll-interval={poll_interval}",
             f"--batch-size={batch_size}"
         ]
@@ -113,7 +113,7 @@ class ScraperOrchestrator:
         print(f"🤖 Starting parser daemon...")
 
         cmd = [
-            sys.executable, "core/parsers/parser_daemon.py", "start",
+            sys.executable, os.path.join(os.path.dirname(__file__), "..", "parser.py"), "start",
             f"--poll-interval={poll_interval}",
             f"--batch-size={batch_size}"
         ]
